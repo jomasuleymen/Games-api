@@ -1,4 +1,4 @@
 {
-    "secretKey": "tempSecretKey",
+    "secretKey": "jwtKey",
     "db": "vidly_db"
 }
