@@ -1,4 +1,4 @@
-const Joi = require("Joi");
+const Joi = require("joi");
 
 const loginValidation = Joi.object({
     username: Joi.string().min(3).max(255).required().messages({
