@@ -6,7 +6,7 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "nodemon": "nodemon server.js localhost 3000",
-        "start": "set NODE_ENV=production&& node server.js"
+        "start": "cross-env node server.js"
     },
     "author": "",
     "license": "ISC",
