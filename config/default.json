@@ -1,0 +1,4 @@
+{
+    "secretKey": "tempSecretKey",
+    "db": "mongodb://localhost/games"
+}
