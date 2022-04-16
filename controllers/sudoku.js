@@ -1,61 +1,73 @@
 const Sudoku = require("../models/sudoku");
 const axios = require("axios");
 
-const generate = (req, res) => {
-    const difficulty = req.query.difficulty;
-    axios
-        .get(`https://sugoku.herokuapp.com/board?difficulty=${difficulty}`)
-        .then(({ data }) => {
-            const { board } = data;
-            res.json(board);
-        })
-        .catch(() => {
-            res.status(400).json({ message: "Some error occured" });
-        });
+const generateBoard = (req, res) => {
+    try {
+        const difficulty = req.query.difficulty;
+        axios
+            .get(`https://sugoku.herokuapp.com/board?difficulty=${difficulty}`)
+            .then(({ data }) => {
+                const { board } = data;
+                res.json(board);
+            })
+            .catch(() => {
+                res.status(400).json({ error: "Some error occured" });
+            });
+    } catch (err) {
+        res.status(400).json({ error: "Some error occured" });
+    }
 };
 
-const record = async (req, res) => {
-    const { spentTime, difficulty } = req.body;
-    let record = await Sudoku.findOne({ user: req.user });
-    if (!record) {
-        record = await Sudoku.create({
-            user: req.user,
+const updateRecord = async (req, res) => {
+    try {
+        const { spentTime, difficulty } = req.body;
+        let userRecord = await Sudoku.findOne({ user: req.user._id });
+        if (!userRecord) {
+            userRecord = await Sudoku.create({
+                user: req.user._id,
+            });
+        }
+
+        userRecord[difficulty].min =
+            Math.min(userRecord[difficulty].min, spentTime) || spentTime;
+
+        const levelRecord = userRecord[difficulty];
+        levelRecord.played += 1;
+        levelRecord.allTime += spentTime;
+        levelRecord.average = levelRecord.allTime / levelRecord.played;
+        await userRecord.save();
+
+        res.json({
+            min: levelRecord.min,
+            played: levelRecord.played,
+            average: levelRecord.average,
         });
-        record[difficulty].min = spentTime;
-    } else {
-        record[difficulty].min = Math.min(record[difficulty].min, spentTime);
+    } catch (err) {
+        res.status(400).json({ error: "Some error occured" });
     }
-
-    const recordData = record[difficulty];
-    recordData.played += 1;
-    recordData.allTime += spentTime;
-    recordData.average = recordData.allTime / recordData.played;
-    await record.save();
-
-    res.json({
-        [difficulty]: {
-            min: recordData.min,
-            played: recordData.played,
-            average: recordData.average,
-        },
-    });
 };
 
-const getRecord = async (req, res) => {
-    let record = await Sudoku.findOne({ user: req.user });
-    if (!record) {
-        res.json(null);
-        return;
+const retriveRecord = async (req, res) => {
+    try {
+        let userRecord = await Sudoku.findOne({ user: req.user._id });
+        if (!userRecord) {
+            userRecord = await Sudoku.create({
+                user: req.user._id,
+            });
+        }
+
+        res.json({
+            Easy: userRecord.Easy,
+            Medium: userRecord.Medium,
+            Hard: userRecord.Hard,
+        });
+    } catch (err) {
+        res.status(400).json({ error: "Some error occured" });
     }
-    res.json({
-        Easy: record.Easy,
-        Medium: record.Medium,
-        Hard: record.Hard,
-    });
 };
 
 module.exports = {
-    generate,
-    record,
-    getRecord,
+    generateBoard,
+    updateRecord,
+    retriveRecord,
 };

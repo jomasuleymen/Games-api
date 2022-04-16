@@ -1,10 +1,9 @@
-const router = require('express').Router();
-const sudokuController = require('../controllers/sudoku');
-const userDetermine = require('../middleware/user');
-const auth = require('../middleware/auth');
+const router = require("express").Router();
+const sudokuController = require("../controllers/sudoku");
+const auth = require("../middleware/auth");
 
-router.get('/generate', sudokuController.generate);
-router.put('/record', auth, sudokuController.record);
-router.get('/record', auth, sudokuController.getRecord);
+router.get("/board", sudokuController.generateBoard);
+router.put("/records", auth, sudokuController.updateRecord);
+router.get("/records", auth, sudokuController.retriveRecord);
 
 module.exports = router;

@@ -6,16 +6,15 @@ const {
     registerValidation,
 } = require("../utils/inputValidation");
 
-
 async function registerUser(userData) {
     const { value: data, error } = registerValidation.validate(userData);
     if (error) throw new Error(error.details[0].message);
 
-    const userCount = await User.find({ username: data.username }).count();
-    if (userCount > 0) throw new Error(`username "${data.username}" exists`);
+    let candidate = await User.findOne({ username: data.username });
+    if (candidate > 0) throw new Error(`User with username "${data.username}" already exists.`);
 
-    const emailCount = await User.find({ email: data.email }).count();
-    if (emailCount > 0) throw new Error(`email "${data.email}" exists`);
+    candidate = await User.findOne({ email: data.email });
+    if (candidate) throw new Error(`User with email "${data.email}" already exists.`);
 
     await bcrypt.genSalt(10).then((salt) => {
         data.password = bcrypt.hashSync(data.password, salt);
@@ -26,19 +25,19 @@ async function registerUser(userData) {
     });
 }
 
-async function getUser(userData) {
-    const { value: data, error } = loginValidation.validate(userData);
+async function getUser(data) {
+    const { value: userData, error } = loginValidation.validate(data);
     if (error) throw new Error(error.details[0].message);
 
-    const searchData = data.username.includes("@") ? "email" : "username";
+    const searchBy = userData.username.includes("@") ? "email" : "username";
 
-    const user = await User.findOne({ [searchData]: data.username });
+    const user = await User.findOne({ [searchBy]: userData.username });
 
     if (!user)
-        throw new Error(`user not found with ${searchData} ${data.username}`);
+        throw new Error(`User not found with ${searchBy} ${userData.username}`);
 
-    const same = bcrypt.compareSync(data.password, user.password);
-    if (!same) throw new Error("wrong password");
+    const isPassValid = bcrypt.compareSync(userData.password, user.password);
+    if (!isPassValid) throw new Error("Invalid password");
 
     return user;
 }
@@ -51,5 +50,5 @@ async function getUserById(id) {
 module.exports = {
     registerUser,
     getUser,
-    getUserById
+    getUserById,
 };

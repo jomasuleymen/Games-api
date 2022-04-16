@@ -23,5 +23,5 @@ const registerValidation = Joi.object({
 
 module.exports = {
     loginValidation,
-    registerValidation
+    registerValidation,
 };
