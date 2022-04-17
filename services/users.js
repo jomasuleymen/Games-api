@@ -10,18 +10,24 @@ async function registerUser(userData) {
     const { value: data, error } = registerValidation.validate(userData);
     if (error) throw new Error(error.details[0].message);
 
-    let candidate = await User.findOne({ username: data.username });
-    if (candidate > 0) throw new Error(`User with username "${data.username}" already exists.`);
-
-    candidate = await User.findOne({ email: data.email });
-    if (candidate) throw new Error(`User with email "${data.email}" already exists.`);
+    let candidate = await User.findOne({
+        $or: [{ username: data.username }, { email: data.email }],
+    });
+    
+    if (candidate) {
+        if (candidate.username == data.username)
+            throw new Error(`User with username "${data.username}" already exists.`);
+        else
+            throw new Error(`User with email "${data.email}" already exists.`);
+    }
 
     await bcrypt.genSalt(10).then((salt) => {
         data.password = bcrypt.hashSync(data.password, salt);
     });
 
     await User.create(data).catch((err) => {
-        throw new Error("some error occured on server");
+        console.log(err);
+        throw new Error("some error occured on the server");
     });
 }
 
